@@ -3,6 +3,15 @@
 // Right-click it for more options.
 
 import Cocoa
+import ServiceManagement
+
+/// Turns on "open at login" the first time the app runs; after that the user's choice is kept.
+func enableLaunchAtLoginOnFirstRun() {
+    let key = "didSetUpLaunchAtLogin"
+    guard !UserDefaults.standard.bool(forKey: key) else { return }
+    UserDefaults.standard.set(true, forKey: key)
+    try? SMAppService.mainApp.register()
+}
 
 let screenshotsFolder: URL = {
     let url = FileManager.default.homeDirectoryForCurrentUser
@@ -130,6 +139,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             button.action = #selector(statusClicked)
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
+        enableLaunchAtLoginOnFirstRun()
     }
 
     func setIcon(_ symbol: String) {
@@ -164,6 +174,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         add("Capture Area in 3 s", #selector(menuTimed), symbol: "timer")
         m.addItem(.separator())
         add("Open Screenshots Folder", #selector(openFolder), symbol: "folder")
+        add("Launch at Login", #selector(toggleLogin), symbol: "power")
+        m.items.last?.state = SMAppService.mainApp.status == .enabled ? .on : .off
         m.addItem(.separator())
         add("Quit SnipTab", #selector(quit), "q")
         // Attach the menu just for this click so left-click keeps capturing directly.
@@ -178,6 +190,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func menuTimed() { capture(.area, delay: 3) }
     @objc func openFolder() { NSWorkspace.shared.open(screenshotsFolder) }
     @objc func quit() { NSApp.terminate(nil) }
+
+    @objc func toggleLogin() {
+        do {
+            if SMAppService.mainApp.status == .enabled { try SMAppService.mainApp.unregister() }
+            else { try SMAppService.mainApp.register() }
+        } catch {
+            NSSound.beep()
+        }
+    }
 
     // MARK: Capture
 
