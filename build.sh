@@ -24,5 +24,7 @@ cat > "$APP/Contents/Info.plist" <<'EOF'
 </dict>
 </plist>
 EOF
-codesign --force --sign - "$APP" >/dev/null 2>&1 || true
+# Sign with a stable identity (bundle id) instead of the per-build hash, so macOS
+# keeps the Screen Recording permission across rebuilds.
+codesign --force --sign - -r='designated => identifier "local.sniptab"' "$APP"
 echo "Built $(pwd)/$APP"
