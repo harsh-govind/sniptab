@@ -160,7 +160,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             showMenu()
             return
         }
-        if (e?.clickCount ?? 1) >= 2 {
+        // A second click while the first is still waiting = double-click. (Menu bar buttons don't
+        // reliably report clickCount, so timing is tracked here instead.)
+        if pendingClick != nil || (e?.clickCount ?? 1) >= 2 {
             // Double-click: whole screen, saved straight away.
             pendingClick?.cancel()
             pendingClick = nil
@@ -173,7 +175,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.capture(.area)
         }
         pendingClick = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + NSEvent.doubleClickInterval, execute: work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + min(max(NSEvent.doubleClickInterval, 0.3), 0.5),
+                                      execute: work)
     }
 
     // MARK: Menu

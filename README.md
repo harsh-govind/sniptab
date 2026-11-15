@@ -13,7 +13,7 @@ A tiny macOS menu bar app for taking screenshots. Click the ✂️ icon, drag ov
 
 ## Install
 
-1. Download **SnipTab-1.2.dmg** from the [latest release](../../releases/latest).
+1. Download **SnipTab-1.2.1.dmg** from the [latest release](../../releases/latest).
 2. Open it and drag **SnipTab** into **Applications**.
 3. The app isn't notarized by Apple, so the first launch is blocked. Open it once from
    **System Settings → Privacy & Security → "Open Anyway"**, or run:
@@ -28,7 +28,7 @@ Requires macOS 13+ and the Xcode command line tools (`xcode-select --install`).
 
 ```bash
 ./build.sh            # builds SnipTab.app
-./release.sh 1.2      # builds dist/SnipTab-1.2.dmg
+./release.sh 1.2.1      # builds dist/SnipTab-1.2.1.dmg
 ```
 
 On the first capture macOS asks for **Screen Recording** permission. Enable SnipTab in
