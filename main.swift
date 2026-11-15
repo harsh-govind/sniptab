@@ -1,5 +1,6 @@
 // SnipTab — a scissors icon in the menu bar.
 // Left-click it to drag-select an area and capture a screenshot.
+// Double-click it to capture the full screen.
 // Right-click it for more options.
 
 import Cocoa
@@ -134,7 +135,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.autosaveName = "SnipTab"
         if let button = statusItem.button {
             setIcon("scissors")
-            button.toolTip = "SnipTab — click to capture an area, right-click for options"
+            button.toolTip = "SnipTab — click to capture an area, double-click for the full screen, right-click for options"
             button.target = self
             button.action = #selector(statusClicked)
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -149,13 +150,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.button?.image = img
     }
 
+    /// Pending single-click action, held back briefly in case a second click turns it into a double-click.
+    var pendingClick: DispatchWorkItem?
+
     @objc func statusClicked() {
         let e = NSApp.currentEvent
         if e?.type == .rightMouseUp || e?.modifierFlags.contains(.control) == true || e?.modifierFlags.contains(.option) == true {
+            pendingClick?.cancel()
             showMenu()
-        } else {
-            capture(.area)
+            return
         }
+        if (e?.clickCount ?? 1) >= 2 {
+            // Double-click: whole screen, saved straight away.
+            pendingClick?.cancel()
+            pendingClick = nil
+            capture(.fullScreen)
+            return
+        }
+        // Single click: wait out the double-click window, then start the area selection.
+        let work = DispatchWorkItem { [weak self] in
+            self?.pendingClick = nil
+            self?.capture(.area)
+        }
+        pendingClick = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + NSEvent.doubleClickInterval, execute: work)
     }
 
     // MARK: Menu
